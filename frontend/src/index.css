@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+/* ── Design tokens ─────────────────────────────────────────────────────────
+   Chrome follows the CRM reference (warm cream page, white cards, hairlines).
+   Chart + status colors are the validated dataviz reference palette. */
+@theme {
+  --color-page: #f4f2ee;
+  --color-surface: #fcfcfb;
+  --color-sunken: #efece7;
+  --color-band: #f6f4f0;
+
+  --color-ink: #0b0b0b;
+  --color-ink-2: #52514e;
+  --color-ink-3: #898781;
+
+  --color-line: #e6e3dc;
+  --color-line-soft: #eeebe5;
+
+  /* series (categorical slots 1–2, light mode) */
+  --color-series-1: #2a78d6;
+  --color-series-2: #1baf7a;
+
+  /* status — fixed, never themed */
+  --color-good: #0ca30c;
+  --color-warning: #fab219;
+  --color-serious: #ec835a;
+  --color-critical: #d03b3b;
+  --color-delta-good: #006300;
+  --color-delta-good-bg: #e4f3e4;
+  --color-delta-bad: #b02a2a;
+  --color-delta-bad-bg: #fbe9e9;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+}
+
+:root { color-scheme: light dark; }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-page: #0d0d0d;
+    --color-surface: #1a1a19;
+    --color-sunken: #232322;
+    --color-band: #202020;
+    --color-ink: #ffffff;
+    --color-ink-2: #c3c2b7;
+    --color-ink-3: #898781;
+    --color-line: #2c2c2a;
+    --color-line-soft: #262624;
+    --color-series-1: #3987e5;
+    --color-series-2: #199e70;
+    --color-delta-good: #0ca30c;
+    --color-delta-good-bg: #12290f;
+    --color-delta-bad: #e66767;
+    --color-delta-bad-bg: #331414;
+  }
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.tnum { font-variant-numeric: tabular-nums; }
+.date-serif { font-family: var(--font-serif); }

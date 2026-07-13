@@ -1,0 +1,21 @@
+# Local Postgres for the customer backend. The API itself runs on the host via
+# `uv run python run_server.py` (or uvicorn). This is just its database.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ed_user
+      POSTGRES_PASSWORD: ed_password
+      POSTGRES_DB: email_dashboard
+    ports:
+      - "5433:5432"   # host 5433 to avoid clashing with any local/AI-Labs Postgres
+    volumes:
+      - ed_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ed_user -d email_dashboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ed_pgdata:
