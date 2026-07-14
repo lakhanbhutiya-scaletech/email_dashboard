@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { setSession, isAuthed, getUser } from '../lib/auth'
 import { MailIcon } from '../components/icons'
+import { microsoftSsoConfigured, signInWithMicrosoft } from '../lib/firebase'
 
 // Seeded accounts for the dev sign-in shim (see scripts/seed_demo.py).
 const DEV_ACCOUNTS = [
@@ -46,6 +47,27 @@ export function LoginPage() {
     }
   }
 
+  const signInMicrosoft = async () => {
+    if (!microsoftSsoConfigured) {
+      setMsNote(true)
+      return
+    }
+    setBusy('microsoft')
+    setError(null)
+    try {
+      const idToken = await signInWithMicrosoft()
+      // Verifies the token via AI Labs' oauth-login, then maps the email to a
+      // registered admin/employee here (see app/api/routes/auth.py:microsoft_login).
+      const { token, user } = await api.microsoftLogin(idToken)
+      setSession(token, user)
+      nav(landing(user), { replace: true })
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-band px-6">
       <div className="w-full max-w-[400px]">
@@ -62,11 +84,12 @@ export function LoginPage() {
         <div className="rounded-2xl border border-line bg-surface p-6 shadow-[0_1px_3px_rgba(11,11,11,0.06)]">
           {/* Primary: Microsoft SSO */}
           <button
-            onClick={() => setMsNote(true)}
-            className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-line bg-surface px-4 py-3 text-[14.5px] font-medium transition-colors hover:bg-band"
+            onClick={signInMicrosoft}
+            disabled={!!busy}
+            className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-line bg-surface px-4 py-3 text-[14.5px] font-medium transition-colors hover:bg-band disabled:opacity-50"
           >
             <MsLogo />
-            Sign in with Microsoft
+            {busy === 'microsoft' ? 'Signing in…' : 'Sign in with Microsoft'}
           </button>
           {msNote && (
             <p className="mt-2.5 rounded-lg bg-warning/10 px-3 py-2 text-[12.5px] text-[#8a6200] dark:text-warning">

@@ -139,6 +139,8 @@ export const api = {
   // ── Auth + employee self-service ──
   devLogin: (email: string) =>
     post<{ token: string; user: SessionUser }>(`/auth/dev-login`, { email }),
+  microsoftLogin: (idToken: string) =>
+    post<{ token: string; user: SessionUser }>(`/auth/microsoft`, { token: idToken }),
   authMe: () => get<SessionUser>(`/auth/me`),
   myDashboard: () => get<EmployeeDashboard>(`/me/dashboard`),
   mySnapshots: (limit = 50) => get<Snapshot[]>(`/me/snapshots?limit=${limit}`),

@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ed_password
       POSTGRES_DB: email_dashboard
     ports:
-      - "5433:5432"   # host 5433 to avoid clashing with any local/AI-Labs Postgres
+      - "5434:5432"   # host 5434 (5433 was taken by a native Postgres 15 on this machine)
     volumes:
       - ed_pgdata:/var/lib/postgresql/data
     healthcheck:

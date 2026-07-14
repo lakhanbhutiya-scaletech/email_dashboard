@@ -62,6 +62,17 @@ def latest_snapshot(db: Session, employee_id: str) -> MailboxSnapshot | None:
     )
 
 
+def get_snapshot_by_bucket(
+    db: Session, employee_id: str, bucket: str
+) -> MailboxSnapshot | None:
+    return db.scalar(
+        select(MailboxSnapshot).where(
+            MailboxSnapshot.employee_id == employee_id,
+            MailboxSnapshot.hour_bucket == bucket,
+        )
+    )
+
+
 def list_snapshots(
     db: Session, employee_id: str, limit: int = 50, offset: int = 0
 ) -> list[MailboxSnapshot]:

@@ -48,9 +48,15 @@ to and those still awaiting a reply — most important first.
 - Keep sentiment_summary to one or two sentences.
 """
 
-# Message sent by the cron each hour.
-HOURLY_MESSAGE = (
-    "Analyze the last {window_hours} hour(s) of my Outlook inbox and reply with "
+# Message sent for a run covering a specific elapsed span since the last capture
+# (cron tick or manual "run now") — phrased in minutes below one hour so short
+# re-sync gaps still get a precise, non-overlapping window.
+SINCE_LAST_MESSAGE_MINUTES = (
+    "Analyze the last {minutes} minute(s) of my Outlook inbox and reply with "
+    "ONLY the JSON object described in your instructions."
+)
+SINCE_LAST_MESSAGE_HOURS = (
+    "Analyze the last {hours} hour(s) of my Outlook inbox and reply with "
     "ONLY the JSON object described in your instructions."
 )
 
@@ -78,5 +84,11 @@ def build_agent_payload(
     }
 
 
-def hourly_message(window_hours: int) -> str:
-    return HOURLY_MESSAGE.format(window_hours=window_hours)
+def since_last_message(minutes: int) -> str:
+    """Message for a window covering exactly the elapsed time since the last
+    successful capture — minutes phrasing below an hour so short re-sync gaps
+    still get a precise ask, hours phrasing above it."""
+    if minutes < 60:
+        return SINCE_LAST_MESSAGE_MINUTES.format(minutes=minutes)
+    hours = round(minutes / 60, 2)
+    return SINCE_LAST_MESSAGE_HOURS.format(hours=hours)

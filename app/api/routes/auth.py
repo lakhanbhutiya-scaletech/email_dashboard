@@ -1,8 +1,11 @@
 """Authentication for the dashboard's own users (spec: "Sign in with Microsoft").
 
-Real login exchanges a Microsoft token via AI Labs oauth-login (POST /auth/microsoft,
-stubbed until Azure credentials are wired). A dev-login shim signs a seeded user in
-directly so the login/employee/admin surfaces are demoable now.
+Real login exchanges a Microsoft ID token via AI Labs' `/auth/oauth-login`, which
+verifies the token with Microsoft and returns the AI Labs identity for that user.
+This backend then maps the identity's email to a locally known company admin or
+provisioned employee and issues its own browser session. A dev-login shim signs a
+seeded user in directly so the login/employee/admin surfaces are demoable without
+a real Microsoft token.
 """
 
 from __future__ import annotations
@@ -14,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.crud import employee as employee_crud
 from app.db.session import get_db
+from app.services.ailabs_client import AILabsAuthError, AILabsClient, AILabsError
 from app.services.session import get_session_user, issue_session, resolve_login
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -69,14 +73,33 @@ def dev_login(body: DevLoginRequest, db: Session = Depends(get_db)) -> LoginResp
 
 
 @router.post("/microsoft", response_model=LoginResponse)
-def microsoft_login(body: MicrosoftLoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
+async def microsoft_login(body: MicrosoftLoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
     """Real login — exchange the Microsoft ID token via AI Labs oauth-login, then
-    provision + issue a session. Not wired until Azure credentials exist."""
-    raise HTTPException(
-        status_code=501,
-        detail="Microsoft SSO not configured yet — set up the Azure app registration, "
-        "then wire this to AI Labs oauth-login + provisioning. Use dev-login meanwhile.",
-    )
+    map the verified identity's email to a locally known admin/employee and issue
+    a dashboard session.
+
+    This does NOT provision a new employee — that only happens through the
+    onboarding flow (`POST /onboarding/provision`), which needs a company_id.
+    A Microsoft login for an email this backend doesn't recognize is rejected.
+    """
+    try:
+        login = await AILabsClient().oauth_login(body.token)
+    except AILabsAuthError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except AILabsError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    email = login["user"].get("email")
+    if not email:
+        raise HTTPException(status_code=502, detail="AI Labs did not return an email for this account")
+
+    user = resolve_login(db, email)
+    if user is None:
+        raise HTTPException(
+            status_code=403,
+            detail=f"{email} is not a registered admin or employee for this dashboard",
+        )
+    return LoginResponse(token=issue_session(**user), user=_enrich(db, user))
 
 
 @router.get("/me", response_model=SessionUser)
