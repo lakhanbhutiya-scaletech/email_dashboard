@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     AGENT_MAX_TOKENS: int = 4096
     AGENT_MEMORY_WINDOW: int = 4
 
+    # Dev: when true, run_analysis_for_employee returns generated dummy JSON
+    # instead of calling AI Labs — lets the pipeline run with no Outlook connected.
+    DUMMY_ANALYSIS: bool = False
+
     # Cron
     CRON_ENABLED: bool = True
     CRON_INTERVAL_MINUTES: int = 60

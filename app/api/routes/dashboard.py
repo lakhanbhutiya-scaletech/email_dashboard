@@ -19,11 +19,14 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/overview", response_model=OverviewResponse)
 def overview(
-    company_id: str | None = Query(None), db: Session = Depends(get_db)
+    company_id: str | None = Query(None),
+    date: str | None = Query(None, description="YYYY-MM-DD to view a past day; omit for latest"),
+    db: Session = Depends(get_db),
 ) -> OverviewResponse:
     """Org-wide aggregate for the dashboard landing page: KPI tiles (+deltas vs
-    the previous hour), flattened pending replies, and the hourly volume series."""
-    return build_overview(db, company_id)
+    the previous hour), flattened pending replies, and the hourly volume series.
+    Pass `date` to review a specific past day."""
+    return build_overview(db, company_id, day=date)
 
 
 @router.get("/employees", response_model=list[EmployeeRead])

@@ -38,6 +38,21 @@ async def run_analysis_for_employee(
     bucket = snapshot_crud.hour_bucket(now)
     window_hours = max(1, settings.CRON_INTERVAL_MINUTES // 60)
 
+    # Dev dummy mode: skip Outlook + AI Labs entirely and store generated data,
+    # so the pipeline is exercisable without a real mailbox connection.
+    if settings.DUMMY_ANALYSIS:
+        import random
+
+        from app.services.dummy import build_dummy_payload
+
+        rng = random.Random(f"{employee.id}:{bucket}")  # stable per employee+hour
+        snapshot_crud.upsert_snapshot(
+            db, employee_id=employee.id, captured_at=now, bucket=bucket,
+            payload=build_dummy_payload(rng, now, lively=True), raw_text=None,
+            ai_labs_session_id=None, status="ok", error=None,
+        )
+        return "ok"
+
     if not employee.outlook_connected:
         # Until Outlook is connected the agent has no mailbox to read (spec §3 step 4).
         snapshot_crud.upsert_snapshot(

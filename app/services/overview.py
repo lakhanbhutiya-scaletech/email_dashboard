@@ -65,7 +65,12 @@ def _awaiting(payload: dict | None) -> list[dict]:
 _PRIORITY_RANK = {"high": 0, "medium": 1, "low": 2}
 
 
-def build_overview(db: Session, company_id: str | None = None) -> OverviewResponse:
+def build_overview(
+    db: Session, company_id: str | None = None, day: str | None = None
+) -> OverviewResponse:
+    """Aggregate the dashboard. When `day` (YYYY-MM-DD) is given, restrict to that
+    calendar day so you can review any past date; otherwise use all history and
+    show each employee's most recent hour."""
     emp_stmt = select(Employee)
     if company_id:
         emp_stmt = emp_stmt.where(Employee.company_id == company_id)
@@ -74,16 +79,18 @@ def build_overview(db: Session, company_id: str | None = None) -> OverviewRespon
 
     snaps: list[MailboxSnapshot] = []
     if employees:
-        snaps = list(
-            db.scalars(
-                select(MailboxSnapshot)
-                .where(
-                    MailboxSnapshot.employee_id.in_(emp_by_id),
-                    MailboxSnapshot.status == "ok",
-                )
-                .order_by(MailboxSnapshot.hour_bucket)
+        stmt = (
+            select(MailboxSnapshot)
+            .where(
+                MailboxSnapshot.employee_id.in_(emp_by_id),
+                MailboxSnapshot.status == "ok",
             )
+            .order_by(MailboxSnapshot.hour_bucket)
         )
+        if day:
+            # hour_bucket is "YYYY-MM-DDTHH", so a date prefix selects that day.
+            stmt = stmt.where(MailboxSnapshot.hour_bucket.like(f"{day}%"))
+        snaps = list(db.scalars(stmt))
 
     # Per-employee snapshots ordered by hour: last = latest, second-to-last = previous.
     by_emp: dict[str, list[MailboxSnapshot]] = {}

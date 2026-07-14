@@ -10,6 +10,7 @@ const DEV_ACCOUNTS = [
   { email: 'liam.anderson@demo.co', label: 'Liam Anderson', role: 'employee' },
   { email: 'sophia.bennett@demo.co', label: 'Sophia Bennett', role: 'employee' },
   { email: 'ethan.parker@demo.co', label: 'Ethan Parker', role: 'employee' },
+  { email: 'noah.carter@demo.co', label: 'Noah Carter', role: 'employee' },
   { email: 'maya.iyer@demo.co', label: 'Maya Iyer (no Outlook yet)', role: 'employee' },
 ]
 

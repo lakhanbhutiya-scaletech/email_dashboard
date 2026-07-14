@@ -10,15 +10,17 @@ import { MailIcon, ReplyIcon, ClockIcon, InboxIcon, SearchIcon, RefreshIcon, Ale
 type Range = '24h' | '48h'
 
 export function OverviewPage() {
-  const { data, error, loading, reload } = useApi(() => api.overview(), [])
   const [range, setRange] = useState<Range>('24h')
   const [search, setSearch] = useState('')
+  const [day, setDay] = useState('')  // '' = live/latest; YYYY-MM-DD = that past day
   const [running, setRunning] = useState(false)
+  const { data, error, loading, reload } = useApi(() => api.overview(undefined, day || undefined), [day])
 
   const series = useMemo(() => {
     if (!data) return []
+    if (day) return data.volume_series  // a specific day: show its full 24h
     return range === '24h' ? data.volume_series.slice(-24) : data.volume_series
-  }, [data, range])
+  }, [data, range, day])
 
   const pending = useMemo(() => {
     if (!data) return []
@@ -57,14 +59,33 @@ export function OverviewPage() {
             className="w-full rounded-xl border border-line bg-surface py-2.5 pl-10 pr-4 text-[14px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-series-1/30"
           />
         </label>
-        <Segmented<Range>
-          options={[
-            { value: '24h', label: 'Last 24 hours' },
-            { value: '48h', label: 'Last 48 hours' },
-          ]}
-          value={range}
-          onChange={setRange}
-        />
+        {!day && (
+          <Segmented<Range>
+            options={[
+              { value: '24h', label: 'Last 24 hours' },
+              { value: '48h', label: 'Last 48 hours' },
+            ]}
+            value={range}
+            onChange={setRange}
+          />
+        )}
+        <label className="flex items-center gap-2 text-[13px] text-ink-2">
+          <span className="text-ink-3">View day</span>
+          <input
+            type="date"
+            value={day}
+            onChange={(e) => setDay(e.target.value)}
+            className="rounded-xl border border-line bg-surface px-3 py-2 text-[13.5px] focus:outline-none focus:ring-2 focus:ring-series-1/30"
+          />
+        </label>
+        {day && (
+          <button
+            onClick={() => setDay('')}
+            className="rounded-xl border border-line bg-surface px-3 py-2 text-[13px] font-medium text-ink-2 hover:text-ink"
+          >
+            ← Back to live
+          </button>
+        )}
         <button
           onClick={runCron}
           disabled={running}

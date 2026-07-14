@@ -121,8 +121,13 @@ export interface Company {
 // ── Calls ───────────────────────────────────────────────────────────────────
 
 export const api = {
-  overview: (companyId?: string) =>
-    get<Overview>(`/dashboard/overview${companyId ? `?company_id=${companyId}` : ''}`),
+  overview: (companyId?: string, date?: string) => {
+    const q = new URLSearchParams()
+    if (companyId) q.set('company_id', companyId)
+    if (date) q.set('date', date)
+    const qs = q.toString()
+    return get<Overview>(`/dashboard/overview${qs ? `?${qs}` : ''}`)
+  },
   employees: (companyId?: string) =>
     get<Employee[]>(`/dashboard/employees${companyId ? `?company_id=${companyId}` : ''}`),
   employee: (id: string) => get<EmployeeDashboard>(`/dashboard/employees/${id}`),
