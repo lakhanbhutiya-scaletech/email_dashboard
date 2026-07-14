@@ -1,5 +1,5 @@
 // Browser-side session: the token this backend issued at login, plus the user.
-// Stored in localStorage; attached as a Bearer header by lib/api.ts.
+// attached as a Bearer header by lib/api.ts.
 
 export interface SessionUser {
   email: string
