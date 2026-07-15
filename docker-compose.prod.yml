@@ -6,6 +6,9 @@
 # Requires a .env file in this directory (see .env.example) — FERNET_KEY,
 # AILABS_BASE_URL, etc. DATABASE_URL is overridden below to point at the
 # `db` service by its Docker DNS name, not localhost.
+#
+# frontend binds 127.0.0.1:8080 only (not :80) — host nginx stays on port 80
+# and reverse-proxies to it. See the nginx site config for that.
 
 services:
   db:
@@ -43,7 +46,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "127.0.0.1:8080:80"
     depends_on:
       - backend
     restart: unless-stopped
